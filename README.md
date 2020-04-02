@@ -7,7 +7,7 @@ This library is still a work in progress and the documentation will be extended 
 # Install
 
 ``` bash
-go get https://github.com/PaulBradley/go-cda
+go get github.com/PaulBradley/go-cda
 ```
 
 # Example Usage
