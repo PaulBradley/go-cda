@@ -47,7 +47,9 @@ type ClinicalDocument struct {
 	LabEffectiveTime   []effectiveTime `xml:"component>structuredBody>component>section>entry>act>entryRelationship>organizer>effectiveTime"`
 }
 
-// Parse does X
+// Parse accepts the CDA document as a string
+// and passes it to the Unmarshal function to
+// map the data items into in the struct fields.
 func Parse(clinicalDocument string) (ClinicalDocument, error) {
 
 	parsedClinicDocument := ClinicalDocument{}
@@ -141,14 +143,14 @@ func (cda *ClinicalDocument) DoReformatDateTimeFields() error {
 	var dt time.Time
 
 	// document effectiveTime
-	dt, err = time.Parse("20060201150405+0000", cda.EffectiveTime[0].Value)
+	dt, err = time.Parse("20060302150405-0700", cda.EffectiveTime[0].Value)
 	if err != nil {
 		return err
 	}
 	cda.EffectiveTime[0].Value = dt.Format(dateTimeFormat)
 
 	// lab effectiveTime
-	dt, err = time.Parse("20060201150405+0000", cda.LabEffectiveTime[0].Value)
+	dt, err = time.Parse("20060302150405-0700", cda.LabEffectiveTime[0].Value)
 	if err != nil {
 		return err
 	}
