@@ -1,9 +1,5 @@
 package cda
 
-type languageCode struct {
-	Code string `xml:"code,attr"`
-}
-
 type realmCode struct {
 	Code string `xml:"code,attr"`
 }
