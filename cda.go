@@ -34,7 +34,7 @@ type ClinicalDocument struct {
 }
 
 // Parse accepts the CDA document as a string
-// and passes it to the Unmarshal function to
+// and passes it to the XML Unmarshal function to
 // map the data items into in the struct fields.
 func Parse(clinicalDocument string) (ClinicalDocument, error) {
 
@@ -53,7 +53,7 @@ func Parse(clinicalDocument string) (ClinicalDocument, error) {
 }
 
 // DoSwitchBR replaces the carriage return text
-// within the LabReports from \.br\ to the string
+// within LabReports from \.br\ to the string
 // supplied in the replaceWith parameter
 func (cda *ClinicalDocument) DoSwitchBR(replaceWith string) {
 	v := 0
@@ -77,8 +77,8 @@ func (cda *ClinicalDocument) DoSetReportStyleSheet(URL string) {
 }
 
 // DoFormatDisplayName formats a name by
-// concatenating Prefix, Given, Family
-// and Suffix values
+// concatenating, if present, the following values:
+// - Prefix, Given, Family, Suffix
 func (cda *ClinicalDocument) DoFormatDisplayName(p person) string {
 	var displayName string
 
@@ -186,6 +186,10 @@ func (cda *ClinicalDocument) GenerateReport() string {
 	return cda.html.String()
 }
 
+// htmlDocumentFields outputs an image link if a
+// logo URL has been supplied. The function then
+// outputs a document title, document published
+// date/time along with the document version number
 func (cda *ClinicalDocument) htmlDocumentFields() {
 
 	if len(cda.htmlReportLogoURL) > 0 {
@@ -208,6 +212,9 @@ func (cda *ClinicalDocument) htmlDocumentFields() {
 	cda.html.WriteString(`<hr />`)
 }
 
+// htmlHeader outputs a minimalistic HTML header
+// setting the HTML document title tag and including
+// a link to an external style sheet if one is provided
 func (cda *ClinicalDocument) htmlHeader() {
 	cda.html.WriteString(`<!doctype html>
 	<html>
@@ -243,6 +250,8 @@ func (cda *ClinicalDocument) htmlHeader() {
 	<div class="container-fluid">`)
 }
 
+// htmlFooter outputs the HTML tags necessary
+// to correctly close the document
 func (cda *ClinicalDocument) htmlFooter() {
 	cda.html.WriteString(`</div>
 	</main>
@@ -250,6 +259,7 @@ func (cda *ClinicalDocument) htmlFooter() {
 	</html>`)
 }
 
+// htmlPatientFields outputs the patient related fields
 func (cda *ClinicalDocument) htmlPatientFields() {
 	kcw := "15%"
 
@@ -272,8 +282,8 @@ func (cda *ClinicalDocument) htmlPatientFields() {
 	cda.html.WriteString(htmlTableClose())
 }
 
+// htmlEncounterFields outputs the encounter related fields
 func (cda *ClinicalDocument) htmlEncounterFields() {
-
 	if len(cda.EncompassingEncounter) > 0 {
 		kcw := "15%"
 		cda.html.WriteString(`<h3 class="text-primary">Encounter Information</h3>`)
@@ -305,6 +315,10 @@ func (cda *ClinicalDocument) htmlEncounterFields() {
 	}
 }
 
+// htmlDocumentSections loops through all the structured
+// body segments and outputs the sectional HTML
+// Any HTML tables have some bootstrap classes added to
+// make them render a little nicer than a default HTML table
 func (cda *ClinicalDocument) htmlDocumentSections() {
 	for _, section := range cda.StructuredBodySections {
 		cda.html.WriteString(`<h3 class="text-primary">` + section.Title + `</h3>`)
@@ -320,15 +334,23 @@ func (cda *ClinicalDocument) htmlDocumentSections() {
 	}
 }
 
+// htmlTableOpen returns the HTML
+// fragment to start a table
 func htmlTableOpen() string {
-	return `<table id="patient" class="table table-sm">
+	return `<table class="table table-sm">
 	<tr>`
 }
 
+// htmlTableClose returns the HTML
+// fragment to close a table
 func htmlTableClose() string {
 	return `</table>`
 }
 
+// htmlTableAddRow returns the HTML
+// fragment creating a two column row
+// with the width of the left column
+// specified.
 func htmlTableAddRow(width string, key string, value string) string {
 	return `
 	<tr>
