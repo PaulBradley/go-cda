@@ -219,31 +219,15 @@ func (cda *ClinicalDocument) htmlHeader() {
 	cda.html.WriteString(`<!doctype html>
 	<html>
 	<head>
-		<meta charset="utf-8">
-		<title>` + cda.Title + `</title>
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="stylesheet" type="text/css" href="` + cda.htmlReportStyleSheetURL + `" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous" />
-		<style>
-			body {
-				margin: 2em 10%;
-			}
-			h3 {
-				margin-top: 1em;
-			}
-			thead>tr>td {
-				font-weight: bold;
-			}
-			caption {
-				color: #444;
-				font-weight: bold;
-				caption-side: top;
-			}
-			@media print {
-				main {
-					display: none;
-				}
-			}
-		</style>
+	<meta charset="utf-8">
+	<title>` + cda.Title + `</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">`)
+
+	if len(cda.htmlReportStyleSheetURL) > 0 {
+		cda.html.WriteString(`<link rel="stylesheet" type="text/css" href="` + cda.htmlReportStyleSheetURL + `" />`)
+	}
+
+	cda.html.WriteString(`
 	</head>
 	<body>
 	<main>
