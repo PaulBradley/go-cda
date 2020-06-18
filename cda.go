@@ -2,7 +2,6 @@ package cda
 
 import (
 	"encoding/xml"
-	"fmt"
 	"strings"
 	"time"
 )
@@ -20,27 +19,17 @@ type ClinicalDocument struct {
 	RawXML                  string `xml:",innerxml"`
 	Title                   string `xml:"title"`
 
-	// document header items with attributes
-	Code          []codeSystem    `xml:"code"`
-	EffectiveTime []effectiveTime `xml:"effectiveTime"`
-	IDs           []id            `xml:"id"`
-	LanguageCode  []languageCode  `xml:"languageCode"`
-	RealmCode     []realmCode     `xml:"realmCode"`
-	VersionNumber []versionNumber `xml:"versionNumber"`
-
-	// patient
-	RecordTarget []recordTarget `xml:"recordTarget"`
-
-	// document custodian and author(s)
-	Custodian []custodian `xml:"custodian>assignedCustodian>representedCustodianOrganization"`
-	Authors   []author    `xml:"author"`
-
-	// recipient(s)
-	IntendedRecipients []intendedRecipient `xml:"informationRecipient>intendedRecipient"`
-
-	// encounter information
-	EncompassingEncounter []encompassingEncounter `xml:"componentOf>encompassingEncounter"`
-
+	Code                   []codeSystem            `xml:"code"`
+	EffectiveTime          []effectiveTime         `xml:"effectiveTime"`
+	IDs                    []id                    `xml:"id"`
+	LanguageCode           []languageCode          `xml:"languageCode"`
+	RealmCode              []realmCode             `xml:"realmCode"`
+	VersionNumber          []versionNumber         `xml:"versionNumber"`
+	RecordTarget           []recordTarget          `xml:"recordTarget"`
+	Custodian              []custodian             `xml:"custodian>assignedCustodian>representedCustodianOrganization"`
+	Authors                []author                `xml:"author"`
+	IntendedRecipients     []intendedRecipient     `xml:"informationRecipient>intendedRecipient"`
+	EncompassingEncounter  []encompassingEncounter `xml:"componentOf>encompassingEncounter"`
 	StructuredBodySections []structuredBodySection `xml:"component>structuredBody>component"`
 }
 
@@ -192,7 +181,7 @@ func (cda *ClinicalDocument) GenerateReport() string {
 
 	cda.webReportDocumentFields()
 	cda.webReportPatient()
-
+	cda.webReportEncounter()
 	cda.webReportDocumentSections()
 	cda.webReportFooter()
 
@@ -285,19 +274,51 @@ func (cda *ClinicalDocument) webReportPatient() {
 	cda.htmlReport = cda.htmlReport + webReportTableClose()
 }
 
+func (cda *ClinicalDocument) webReportEncounter() {
+
+	if len(cda.EncompassingEncounter) > 0 {
+
+		kcw := "15%"
+		cda.htmlReport = cda.htmlReport + `<h3 class="text-primary">Encounter Information</h3>`
+		cda.htmlReport = cda.htmlReport + webReportTableOpen()
+
+		if len(cda.Custodian[0].Name) > 0 {
+			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Name", cda.Custodian[0].Name)
+		}
+		if len(cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].ID[0].Extension) > 0 {
+			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Accession#", cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].ID[0].Extension)
+		}
+		if len(cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].StatusCode[0].Code) > 0 {
+			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Status", cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].StatusCode[0].Code)
+		}
+		if len(cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].EffectiveTime[0].Value) > 0 {
+			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Date/Time", cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].EffectiveTime[0].Value)
+		}
+		if len(cda.EncompassingEncounter[0].Code[0].DisplayName) > 0 {
+			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Type", cda.EncompassingEncounter[0].Code[0].DisplayName)
+		}
+		if len(cda.EncompassingEncounter[0].AssignedPerson[0].Family) > 0 {
+			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Assigned Person", cda.DoFormatDisplayName(cda.EncompassingEncounter[0].AssignedPerson[0]))
+		}
+		if len(cda.EncompassingEncounter[0].HealthCareFacility[0].Name) > 0 {
+			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Location", cda.EncompassingEncounter[0].HealthCareFacility[0].Name)
+		}
+
+		cda.htmlReport = cda.htmlReport + webReportTableClose()
+	}
+}
+
 func (cda *ClinicalDocument) webReportDocumentSections() {
 	for _, section := range cda.StructuredBodySections {
 		cda.htmlReport = cda.htmlReport + `<h3 class="text-primary">` + section.Title + `</h3>`
 
 		sectionHTML := section.Text
 		sectionHTML = strings.Replace(sectionHTML, `<table>`, `<table class="table table-sm table-bordered">`, -1)
-
 		cda.htmlReport = cda.htmlReport + sectionHTML
 
 		if len(section.AccreditedText) > 0 {
 			cda.htmlReport = cda.htmlReport + `<hr />`
 			cda.htmlReport = cda.htmlReport + `<p>` + section.AccreditedText + `</p>`
-			fmt.Println(section.AccreditedText)
 		}
 	}
 }
