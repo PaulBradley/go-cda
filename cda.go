@@ -13,7 +13,7 @@ var oidMappings = make(map[string]string)
 // ClinicalDocument holds the parsed values
 // from the supplied CDA XML document
 type ClinicalDocument struct {
-	htmlReport              string
+	html                    strings.Builder
 	htmlReportLogoURL       string
 	htmlReportStyleSheetURL string
 	RawXML                  string `xml:",innerxml"`
@@ -176,20 +176,40 @@ func (cda *ClinicalDocument) DoReformatDateTimeFields() error {
 // GenerateReport returns
 // a formatted HTML 5 report
 func (cda *ClinicalDocument) GenerateReport() string {
-
-	cda.htmlReport = cda.webReportHeader()
-
-	cda.webReportDocumentFields()
-	cda.webReportPatient()
-	cda.webReportEncounter()
-	cda.webReportDocumentSections()
-	cda.webReportFooter()
-
-	return cda.htmlReport
+	cda.DoSwitchBR("<br>")
+	cda.htmlHeader()
+	cda.htmlDocumentFields()
+	cda.htmlPatientFields()
+	cda.htmlEncounterFields()
+	cda.htmlDocumentSections()
+	cda.htmlFooter()
+	return cda.html.String()
 }
 
-func (cda *ClinicalDocument) webReportHeader() string {
-	return `<!doctype html>
+func (cda *ClinicalDocument) htmlDocumentFields() {
+
+	if len(cda.htmlReportLogoURL) > 0 {
+		cda.html.WriteString(`<img src="` + cda.htmlReportLogoURL + `" style="float:right;" />`)
+	}
+
+	cda.html.WriteString(`<h1>`)
+	if len(cda.Custodian[0].Name) > 0 {
+		cda.html.WriteString(cda.Custodian[0].Name + `<br>`)
+	}
+	if len(cda.Title) > 0 {
+		cda.html.WriteString(cda.Title)
+	}
+	cda.html.WriteString(`</h1>`)
+
+	if len(cda.EffectiveTime[0].Value) > 0 {
+		cda.html.WriteString(`<p><b>Published ` + cda.EffectiveTime[0].Value + `</b></p>`)
+	}
+
+	cda.html.WriteString(`<hr />`)
+}
+
+func (cda *ClinicalDocument) htmlHeader() {
+	cda.html.WriteString(`<!doctype html>
 	<html>
 	<head>
 		<meta charset="utf-8">
@@ -220,119 +240,96 @@ func (cda *ClinicalDocument) webReportHeader() string {
 	</head>
 	<body>
 	<main>
-	<div class="container-fluid">`
+	<div class="container-fluid">`)
 }
 
-func (cda *ClinicalDocument) webReportDocumentFields() {
-
-	if len(cda.htmlReportLogoURL) > 0 {
-		cda.htmlReport = cda.htmlReport + `<img src="` + cda.htmlReportLogoURL + `" style="float:right;" />`
-	}
-
-	cda.htmlReport = cda.htmlReport + `<h1>`
-	if len(cda.Custodian[0].Name) > 0 {
-		cda.htmlReport = cda.htmlReport + cda.Custodian[0].Name + `<br>`
-	}
-	if len(cda.Title) > 0 {
-		cda.htmlReport = cda.htmlReport + cda.Title
-	}
-	cda.htmlReport = cda.htmlReport + `</h1>`
-
-	if len(cda.EffectiveTime[0].Value) > 0 {
-		cda.htmlReport = cda.htmlReport + `<p><b>Published ` + cda.EffectiveTime[0].Value + `</b></p>`
-	}
-
-	cda.htmlReport = cda.htmlReport + `<hr />`
-}
-
-func (cda *ClinicalDocument) webReportFooter() {
-	cda.htmlReport = cda.htmlReport + `</div>
+func (cda *ClinicalDocument) htmlFooter() {
+	cda.html.WriteString(`</div>
 	</main>
 	</body>
-	</html>`
+	</html>`)
 }
 
-func (cda *ClinicalDocument) webReportPatient() {
+func (cda *ClinicalDocument) htmlPatientFields() {
 	kcw := "15%"
 
-	cda.htmlReport = cda.htmlReport + `<h3 class="text-primary">Patient</h3>`
-	cda.htmlReport = cda.htmlReport + webReportTableOpen()
-	cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Patient", cda.DoFormatDisplayName(cda.RecordTarget[0].PatientRole.Person[0]))
-	cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Address", cda.DoFormatDisplayAddress(cda.RecordTarget[0].PatientRole.Address[0]))
-	cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "DOB", cda.RecordTarget[0].PatientRole.BirthTime[0].Value)
-	cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Gender", cda.RecordTarget[0].PatientRole.AdministrativeGenderCode[0].DisplayName)
-	cda.htmlReport = cda.htmlReport + webReportTableClose()
+	cda.html.WriteString(`<h3 class="text-primary">Patient</h3>`)
+	cda.html.WriteString(htmlTableOpen())
+	cda.html.WriteString(htmlTableAddRow(kcw, "Patient", cda.DoFormatDisplayName(cda.RecordTarget[0].PatientRole.Person[0])))
+	cda.html.WriteString(htmlTableAddRow(kcw, "Address", cda.DoFormatDisplayAddress(cda.RecordTarget[0].PatientRole.Address[0])))
+	cda.html.WriteString(htmlTableAddRow(kcw, "DOB", cda.RecordTarget[0].PatientRole.BirthTime[0].Value))
+	cda.html.WriteString(htmlTableAddRow(kcw, "Gender", cda.RecordTarget[0].PatientRole.AdministrativeGenderCode[0].DisplayName))
+	cda.html.WriteString(htmlTableClose())
 
 	kcw = "30%"
-	cda.htmlReport = cda.htmlReport + `<h5 class="text-primary">Patient IDs</h5>`
-	cda.htmlReport = cda.htmlReport + webReportTableOpen()
+	cda.html.WriteString(`<h5 class="text-primary">Patient IDs</h5>`)
+	cda.html.WriteString(htmlTableOpen())
 
 	for _, idNumbers := range cda.RecordTarget[0].PatientRole.IDs {
-		cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, idNumbers.Extension, idNumbers.Root)
+		cda.html.WriteString(htmlTableAddRow(kcw, idNumbers.Extension, idNumbers.Root))
 	}
 
-	cda.htmlReport = cda.htmlReport + webReportTableClose()
+	cda.html.WriteString(htmlTableClose())
 }
 
-func (cda *ClinicalDocument) webReportEncounter() {
+func (cda *ClinicalDocument) htmlEncounterFields() {
 
 	if len(cda.EncompassingEncounter) > 0 {
-
 		kcw := "15%"
-		cda.htmlReport = cda.htmlReport + `<h3 class="text-primary">Encounter Information</h3>`
-		cda.htmlReport = cda.htmlReport + webReportTableOpen()
+		cda.html.WriteString(`<h3 class="text-primary">Encounter Information</h3>`)
+		cda.html.WriteString(htmlTableOpen())
 
 		if len(cda.Custodian[0].Name) > 0 {
-			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Name", cda.Custodian[0].Name)
+			cda.html.WriteString(htmlTableAddRow(kcw, "Name", cda.Custodian[0].Name))
 		}
 		if len(cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].ID[0].Extension) > 0 {
-			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Accession#", cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].ID[0].Extension)
+			cda.html.WriteString(htmlTableAddRow(kcw, "Accession#", cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].ID[0].Extension))
 		}
 		if len(cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].StatusCode[0].Code) > 0 {
-			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Status", cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].StatusCode[0].Code)
+			cda.html.WriteString(htmlTableAddRow(kcw, "Status", cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].StatusCode[0].Code))
 		}
 		if len(cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].EffectiveTime[0].Value) > 0 {
-			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Date/Time", cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].EffectiveTime[0].Value)
+			cda.html.WriteString(htmlTableAddRow(kcw, "Date/Time", cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].EffectiveTime[0].Value))
 		}
 		if len(cda.EncompassingEncounter[0].Code[0].DisplayName) > 0 {
-			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Type", cda.EncompassingEncounter[0].Code[0].DisplayName)
+			cda.html.WriteString(htmlTableAddRow(kcw, "Type", cda.EncompassingEncounter[0].Code[0].DisplayName))
 		}
 		if len(cda.EncompassingEncounter[0].AssignedPerson[0].Family) > 0 {
-			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Assigned Person", cda.DoFormatDisplayName(cda.EncompassingEncounter[0].AssignedPerson[0]))
+			cda.html.WriteString(htmlTableAddRow(kcw, "Assigned Person", cda.DoFormatDisplayName(cda.EncompassingEncounter[0].AssignedPerson[0])))
 		}
 		if len(cda.EncompassingEncounter[0].HealthCareFacility[0].Name) > 0 {
-			cda.htmlReport = cda.htmlReport + webReportTableAddRow(kcw, "Location", cda.EncompassingEncounter[0].HealthCareFacility[0].Name)
+			cda.html.WriteString(htmlTableAddRow(kcw, "Location", cda.EncompassingEncounter[0].HealthCareFacility[0].Name))
 		}
 
-		cda.htmlReport = cda.htmlReport + webReportTableClose()
+		cda.html.WriteString(htmlTableClose())
 	}
 }
 
-func (cda *ClinicalDocument) webReportDocumentSections() {
+func (cda *ClinicalDocument) htmlDocumentSections() {
 	for _, section := range cda.StructuredBodySections {
-		cda.htmlReport = cda.htmlReport + `<h3 class="text-primary">` + section.Title + `</h3>`
+		cda.html.WriteString(`<h3 class="text-primary">` + section.Title + `</h3>`)
 
 		sectionHTML := section.Text
 		sectionHTML = strings.Replace(sectionHTML, `<table>`, `<table class="table table-sm table-bordered">`, -1)
-		cda.htmlReport = cda.htmlReport + sectionHTML
+		cda.html.WriteString(sectionHTML)
 
 		if len(section.AccreditedText) > 0 {
-			cda.htmlReport = cda.htmlReport + `<hr />`
-			cda.htmlReport = cda.htmlReport + `<p>` + section.AccreditedText + `</p>`
+			cda.html.WriteString(`<hr />`)
+			cda.html.WriteString(`<p>` + section.AccreditedText + `</p>`)
 		}
 	}
 }
 
-func webReportTableOpen() string {
+func htmlTableOpen() string {
 	return `<table id="patient" class="table table-sm">
 	<tr>`
 }
 
-func webReportTableClose() string {
+func htmlTableClose() string {
 	return `</table>`
 }
 
-func webReportTableAddRow(width string, key string, value string) string {
+func htmlTableAddRow(width string, key string, value string) string {
 	return `
 	<tr>
 		<td width="` + width + `">` + key + `</td>
