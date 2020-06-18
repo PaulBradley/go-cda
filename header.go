@@ -1,9 +1,5 @@
 package cda
 
-type effectiveTime struct {
-	Value string `xml:"value,attr"`
-}
-
 type languageCode struct {
 	Code string `xml:"code,attr"`
 }
