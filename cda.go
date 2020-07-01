@@ -247,22 +247,33 @@ func (cda *ClinicalDocument) htmlFooter() {
 func (cda *ClinicalDocument) htmlPatientFields() {
 	kcw := "15%"
 
-	cda.html.WriteString(`<h3 class="text-primary">Patient</h3>`)
-	cda.html.WriteString(htmlTableOpen())
-	cda.html.WriteString(htmlTableAddRow(kcw, "Patient", cda.DoFormatDisplayName(cda.RecordTarget[0].PatientRole.Person[0])))
-	cda.html.WriteString(htmlTableAddRow(kcw, "Address", cda.DoFormatDisplayAddress(cda.RecordTarget[0].PatientRole.Address[0])))
-	cda.html.WriteString(htmlTableAddRow(kcw, "DOB", cda.RecordTarget[0].PatientRole.BirthTime[0].Value))
-	cda.html.WriteString(htmlTableAddRow(kcw, "Gender", cda.RecordTarget[0].PatientRole.AdministrativeGenderCode[0].DisplayName))
-	cda.html.WriteString(htmlTableClose())
+	if len(cda.RecordTarget) > 0 {
+		cda.html.WriteString(`<h3 class="text-primary">Patient</h3>`)
+		cda.html.WriteString(htmlTableOpen())
 
-	cda.html.WriteString(`<h5 class="text-primary">Patient IDs</h5>`)
-	cda.html.WriteString(htmlTableOpen())
+		if len(cda.RecordTarget[0].PatientRole.Person) > 0 {
+			cda.html.WriteString(htmlTableAddRow(kcw, "Patient", cda.DoFormatDisplayName(cda.RecordTarget[0].PatientRole.Person[0])))
+		}
+		if len(cda.RecordTarget[0].PatientRole.Address) > 0 {
+			cda.html.WriteString(htmlTableAddRow(kcw, "Address", cda.DoFormatDisplayAddress(cda.RecordTarget[0].PatientRole.Address[0])))
+		}
+		if len(cda.RecordTarget[0].PatientRole.BirthTime) > 0 {
+			cda.html.WriteString(htmlTableAddRow(kcw, "DOB", cda.RecordTarget[0].PatientRole.BirthTime[0].Value))
+		}
+		if len(cda.RecordTarget[0].PatientRole.AdministrativeGenderCode) > 0 {
+			cda.html.WriteString(htmlTableAddRow(kcw, "Gender", cda.RecordTarget[0].PatientRole.AdministrativeGenderCode[0].DisplayName))
+		}
+		cda.html.WriteString(htmlTableClose())
 
-	for _, idNumbers := range cda.RecordTarget[0].PatientRole.IDs {
-		cda.html.WriteString(htmlTableAddRow(kcw, idNumbers.Extension, idNumbers.Root))
+		cda.html.WriteString(`<h5 class="text-primary">Patient IDs</h5>`)
+		cda.html.WriteString(htmlTableOpen())
+
+		for _, idNumbers := range cda.RecordTarget[0].PatientRole.IDs {
+			cda.html.WriteString(htmlTableAddRow(kcw, idNumbers.Extension, idNumbers.Root))
+		}
+
+		cda.html.WriteString(htmlTableClose())
 	}
-
-	cda.html.WriteString(htmlTableClose())
 }
 
 // htmlEncounterFields outputs the encounter related fields
