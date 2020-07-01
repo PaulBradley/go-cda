@@ -273,25 +273,25 @@ func (cda *ClinicalDocument) htmlEncounterFields() {
 		cda.html.WriteString(`<h3 class="text-primary">Encounter Information</h3>`)
 		cda.html.WriteString(htmlTableOpen())
 
-		if len(cda.Custodian[0].Name) > 0 {
+		if len(cda.Custodian) > 0 {
 			cda.html.WriteString(htmlTableAddRow(kcw, "Name", cda.Custodian[0].Name))
 		}
-		if len(cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].ID[0].Extension) > 0 {
+		if len(cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].ID) > 0 {
 			cda.html.WriteString(htmlTableAddRow(kcw, "Accession#", cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].ID[0].Extension))
 		}
-		if len(cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].StatusCode[0].Code) > 0 {
+		if len(cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].StatusCode) > 0 {
 			cda.html.WriteString(htmlTableAddRow(kcw, "Status", cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].StatusCode[0].Code))
 		}
-		if len(cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].EffectiveTime[0].Value) > 0 {
+		if len(cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].EffectiveTime) > 0 {
 			cda.html.WriteString(htmlTableAddRow(kcw, "Date/Time", cda.StructuredBodySections[0].EntryRelationshipOrganizer[0].EffectiveTime[0].Value))
 		}
-		if len(cda.EncompassingEncounter[0].Code[0].DisplayName) > 0 {
+		if len(cda.EncompassingEncounter[0].Code) > 0 {
 			cda.html.WriteString(htmlTableAddRow(kcw, "Type", cda.EncompassingEncounter[0].Code[0].DisplayName))
 		}
-		if len(cda.EncompassingEncounter[0].AssignedPerson[0].Family) > 0 {
+		if len(cda.EncompassingEncounter[0].AssignedPerson) > 0 {
 			cda.html.WriteString(htmlTableAddRow(kcw, "Assigned Person", cda.DoFormatDisplayName(cda.EncompassingEncounter[0].AssignedPerson[0])))
 		}
-		if len(cda.EncompassingEncounter[0].HealthCareFacility[0].Name) > 0 {
+		if len(cda.EncompassingEncounter[0].HealthCareFacility) > 0 {
 			cda.html.WriteString(htmlTableAddRow(kcw, "Location", cda.EncompassingEncounter[0].HealthCareFacility[0].Name))
 		}
 
