@@ -255,7 +255,6 @@ func (cda *ClinicalDocument) htmlPatientFields() {
 	cda.html.WriteString(htmlTableAddRow(kcw, "Gender", cda.RecordTarget[0].PatientRole.AdministrativeGenderCode[0].DisplayName))
 	cda.html.WriteString(htmlTableClose())
 
-	kcw = "30%"
 	cda.html.WriteString(`<h5 class="text-primary">Patient IDs</h5>`)
 	cda.html.WriteString(htmlTableOpen())
 
